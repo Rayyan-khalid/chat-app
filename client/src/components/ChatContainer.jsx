@@ -1,25 +1,64 @@
-import React, { useEffect } from 'react'
-import { useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import assets, { messagesDummyData } from '../assets/assets'
 import { formateMessageTime } from '../lib/utils';
+import { ChatContext } from '../../context/ChatContext';
+import { AuthContext } from '../../context/AuthContext';
+import toast from 'react-hot-toast'
 
-const ChatContainer = ({selectedUser, setSelectedUser }) => {
+const ChatContainer = () => {
+
+  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages} = useContext(ChatContext)
+  const { authUser, onlineUsers } = useContext(AuthContext)
 
   const scrollEnd = useRef();
+  
+  const [input, setInput] = useState('');
+
+  // Handle sending a message
+  const handleSendMessage = async (e)=>{
+    e.preventDefault();
+    if(input.trim() === "") return null;
+    await sendMessage({text: input.trim()});
+    setInput("")
+  }
+
+  // handle sending an Image
+  const handleSendImage = async (e) =>{
+    const file = e.target.files[0];
+    if(!file || !file.type.startswith("image/")){
+      toast.error("select an image file")
+      return;
+    }
+    const reader = new FileReader();
+    reader.onloadend = async()=>{
+      await sendMessage({image: reader.result})
+      e.target.value = ""
+    }
+    reader.readAsDataURL(file)
+  }
+
+  useEffect(()=>{
+    if (selectedUser) {
+      getMessages(selectedUser._id)
+    }
+  },[selectedUser])
+
 
   useEffect(() => {
-    scrollEnd.current?.scrollIntoView({behavior: 'smooth'})
-  },[])        // Scroll to the end of the chat when component mounts but iam not adding messagesDummyData as dependency because it will scroll to end on every message change which is not good for user experience
+    if (scrollEnd.current && messages) {
+      scrollEnd.current?.scrollIntoView({behavior: 'smooth'})    
+      }
+  },[messages])        // Scroll to the end of the chat when component mounts but iam not adding messagesDummyData as dependency because it will scroll to end on every message change which is not good for user experience
 
   return selectedUser ? 
   (
     <div className='h-full overflow-scroll relative backdrop-blur-lg'>
       {/* Header Profile Content */}
       <div className='flex items-center gap-4 py-3 mx-4 border-b border-gray-600'>
-        <img src={assets.profile_martin} alt="" className='w-8 rounded-full'/>
+        <img src={selectedUser.ProfilePic || assets.avatar_icon} alt="" className='w-8 rounded-full'/>
         <p className='flex-1 text-lg text-white flex items-center gap-2 '>
-          Martin Johnson
-        <span className='w-2 h-2 rounded-full bg-green-500'></span>
+          {selectedUser.fullName}
+        {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
         </p>
         {/* Info Icon on top right */}
         {/* Back Arrow (Mobile Only) */}
@@ -52,8 +91,8 @@ const ChatContainer = ({selectedUser, setSelectedUser }) => {
 
       {/* Chat Area */}
       <div className='flex flex-col gap-4 h-[calc(100%-120px)] overflow-y-scroll p-3 pb-6'>
-        {messagesDummyData.map((msg, index) => (
-          <div key={index} className={`flex items-end gap-2 justify-end ${msg.senderId !== '680f50e4f10f3cd28382ecf9' && 'flex-row-reverse'}`}>
+        {messages.map((msg, index) => (
+          <div key={index} className={`flex items-end gap-2 justify-end ${msg.senderId !== authUser._id && 'flex-row-reverse'}`}>
             {msg.image ? (
               <img src={msg.image} className='max-w-[230px] border border-gray-700 rounded-lg overflow-hidden mb-8'/>
             ): (
@@ -61,7 +100,7 @@ const ChatContainer = ({selectedUser, setSelectedUser }) => {
             )}
           {/* Avatar of the user */}
             <div className="text-center text-xs">
-              <img src= {msg.senderId === '680f50e4f10f3cd28382ecf9' ? assets.avatar_icon : assets.profile_martin} alt="" className='w-7 rounded-full'/>
+              <img src= {msg.senderId === authUser._id ? authUser?.ProfilePic ||  assets.avatar_icon : selectedUser?.ProfilePic || assets.avatar_icon} alt="" className='w-7 rounded-full'/>
 
               {/* time when message was sent */}
               <p className='text-gray-400'>{formateMessageTime(msg.createdAt) }</p>
@@ -76,7 +115,8 @@ const ChatContainer = ({selectedUser, setSelectedUser }) => {
 
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
       <div className='flex-1 flex items-center bg-white/10 px-4 rounded-full'>
-      <input type="text" placeholder='Send a Message' className='flex-1 text-sm py-3 bg-transparent border-none outline-none text-white placeholder-gray-400'
+      <input onChange={(e)=> setInput(e.target.value)} value={input} 
+        onKeyDown={(e)=> e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a Message' className='flex-1 text-sm py-3 bg-transparent border-none outline-none text-white placeholder-gray-400'
       />
     
       <input type="file" id='image' accept='image/png, image/jpeg' hidden
@@ -89,7 +129,7 @@ const ChatContainer = ({selectedUser, setSelectedUser }) => {
     </label>
   </div>
 
-  <img src={assets.send_button} alt="send_button"
+  <img onClick={handleSendMessage} src={assets.send_button} alt="send_button"
     className='w-7 cursor-pointer hover:scale-110 transition'
   />
 </div>

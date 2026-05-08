@@ -1,3 +1,10 @@
+import dns from 'node:dns';
+
+// This forces Node.js to use Google's DNS to find your MongoDB cluster
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
+
+
 import express from "express";
 import "dotenv/config";
 import cors from "cors";

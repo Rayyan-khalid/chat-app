@@ -44,7 +44,6 @@ io.on("connection", (socket)=>{
         io.emit("getOnlineUsers", Object.keys(userSocketMap))
     });
     
-    
 })
 
 

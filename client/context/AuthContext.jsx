@@ -22,7 +22,7 @@ export const AuthProvider = ({children})=>{
 
     const checkAuth = async ()=>{
         try {
-            const {data} = await axios.get("/api/auth/check");
+            const {data} = await axios.get("/api/auth/check-auth");
             if(data.success){
                 setAuthUser(data.user)
                 connectSocket(data.user) 

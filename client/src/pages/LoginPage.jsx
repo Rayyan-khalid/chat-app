@@ -4,7 +4,7 @@ import { AuthContext } from '../../context/AuthContext'
 
 const LoginPage = () => {
 
-  const [currState, setCurrState] = useState('Sign Up') 
+  const [currState, setCurrState] = useState('Sign up') 
   const [fullName, setFullName] = useState('') 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -20,10 +20,9 @@ const LoginPage = () => {
       setIsDataSubmitted(true)
       return;
     }
-    login(currState=== "Sign Up" ? 'signup' : 'login', {fullName, email, password, bio})
+    login(currState=== "Sign up" ? 'signup' : 'login', {fullName, email, password, bio})
   }
-
-
+  
   return (
     <div className='min-h-screen bg-cover bg-center flex items-center justify-center gap-8 sm:justify-evenly max-sm:flex-col'>
 
@@ -35,7 +34,7 @@ const LoginPage = () => {
       <form onSubmit={onSubmitHandler} className='flex flex-col w-[340px] p-5 gap-5 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl text-white'>
         <h2 className='font-medium text-2xl flex justify-between items-center'>
           {currState}
-          {isDataSubmitted && <img onClick={()=> isDataSubmitted(false)} src={assets.arrow_icon} alt="" className='w-5 cursor-pointer' />}
+          {isDataSubmitted && <img onClick={()=> setIsDataSubmitted(false)} src={assets.arrow_icon} alt="" className='w-5 cursor-pointer' />}
         </h2>
 
         {currState === 'Sign up' && !isDataSubmitted &&(
@@ -79,7 +78,6 @@ const LoginPage = () => {
             <p className='text-sm text-gray-500'>Don't have an account? <span onClick={() => {setCurrState('Sign up'); setIsDataSubmitted(false)}} className='text-violet-500 cursor-pointer'>Sign up</span></p> 
           )}
         </div>
-
 
       </form>
     </div>

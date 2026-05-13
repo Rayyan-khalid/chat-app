@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react'
 import assets from '../assets/assets'
-import { ChatContext } from '../../context/ChatContext'
+import { ChatContext } from '../../context/ChatContextValue'
 import { AuthContext } from '../../context/AuthContext'
 
 const RightSidebar = () => {

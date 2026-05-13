@@ -3,7 +3,7 @@ import React, {useContext, useState, useEffect} from 'react'
 import assets from '../assets/assets'
 import { useNavigate } from 'react-router-dom'
 import { AuthContext } from '../../context/AuthContext'
-import { ChatContext } from '../../context/ChatContext'
+import { ChatContext } from '../../context/ChatContextValue'
 
 const Sidebar = () => {
 
@@ -20,7 +20,7 @@ const Sidebar = () => {
 
     useEffect(()=>{
         getUsers(); 
-    },[onlineUsers])
+    },[getUsers, onlineUsers])
 
 
   return (

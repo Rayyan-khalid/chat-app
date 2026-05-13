@@ -1,9 +1,8 @@
-import { createContext, useEffect, useState, useContext } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import {toast} from "react-hot-toast"
 import { messagesDummyData, userDummyData } from "../src/assets/assets";
-
-export const ChatContext = createContext();
+import { ChatContext } from "./ChatContextValue";
 
 export const ChatProvider = ({children})=>{
 
@@ -16,7 +15,7 @@ export const ChatProvider = ({children})=>{
 
     // get all users for sidebar
 
-    const getUsers = async ()=>{
+    const getUsers = useCallback(async ()=>{
         try {
             const {data} = await axios.get("/api/messages/user")
             if(data.success){
@@ -29,12 +28,12 @@ export const ChatProvider = ({children})=>{
             setUnseenMessages({})
             toast.error(error.message) 
         }
-    }
+    }, [axios])
 
 
     // get messages with selected user
 
-    const getMessages = async(userId)=>{
+    const getMessages = useCallback(async(userId)=>{
         try {
             const {data} = await axios.get(`/api/messages/${userId}`)
             if (data.success){
@@ -44,10 +43,12 @@ export const ChatProvider = ({children})=>{
             setMessages(messagesDummyData)
             toast.error(error.message)
         }
-    }
+    }, [axios])
 
     // send message to selected user
-    const sendMessage = async (messageData)=>{
+    const sendMessage = useCallback(async (messageData)=>{
+        if (!selectedUser) return;
+
         try {
             const {data} = await axios.post(`/api/messages/send/${selectedUser._id}`, messageData);
             if(data.success) {
@@ -58,38 +59,28 @@ export const ChatProvider = ({children})=>{
         } catch (error) {   
             toast.error(error.message);
         }
-    }
+    }, [axios, selectedUser])
 
-    // subscribe to message to selected User
-    const subscribeToMessages = async()=>{
-        if (!socket) return
-            
-        socket.on("newMessage", (newMessage)=>{
+    useEffect(()=>{
+        if (!socket) return;
+
+        const handleNewMessage = (newMessage)=>{
             if(selectedUser && newMessage.senderId === selectedUser._id){
-                newMessage.seen = true;
-                setMessages((prevMessages)=> [...prevMessages, newMessage]);
+                setMessages((prevMessages)=> [...prevMessages, {...newMessage, seen: true}]);
                 axios.put(`/api/messages/mark/${newMessage._id}`)
             } else{
                 setUnseenMessages((prevUnseenMessages)=>({
                     ...prevUnseenMessages, [newMessage.senderId] : prevUnseenMessages[newMessage.senderId] ? prevUnseenMessages[newMessage.senderId] + 1 : 1
                 }))
             }
-        } )
-        
-    }
+        };
 
-    //  unsubscribe from messages
-    const unsubscribeFromMessages = ()=>{
-        if (socket) socket.off("newMessage"); 
-    }
-
-    useEffect(()=>{
-        subscribeToMessages();
-        return ()=> unsubscribeFromMessages();
-    },[socket, selectedUser])
+        socket.on("newMessage", handleNewMessage);
+        return ()=> socket.off("newMessage", handleNewMessage);
+    },[axios, socket, selectedUser])
 
 
-    const value = {
+    const value = useMemo(() => ({
         messages,
         users, 
         selectedUser, 
@@ -99,7 +90,7 @@ export const ChatProvider = ({children})=>{
         setSelectedUser, 
         unseenMessages, 
         setUnseenMessages
-    }
+    }), [getMessages, getUsers, messages, selectedUser, sendMessage, unseenMessages, users])
     return (
     <ChatContext.Provider value={value}>
         {children}

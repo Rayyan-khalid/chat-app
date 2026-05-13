@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
 import assets from '../assets/assets'
 import { formateMessageTime } from '../lib/utils';
-import { ChatContext } from '../../context/ChatContext';
+import { ChatContext } from '../../context/ChatContextValue';
 import { AuthContext } from '../../context/AuthContext';
 import toast from 'react-hot-toast'
 
@@ -41,7 +41,7 @@ const ChatContainer = () => {
     if (selectedUser) {
       getMessages(selectedUser._id)
     }
-  },[selectedUser])
+  },[getMessages, selectedUser])
 
 
   useEffect(() => {

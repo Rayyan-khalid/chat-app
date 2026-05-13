@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react'
-import assets, { messagesDummyData } from '../assets/assets'
+import assets from '../assets/assets'
 import { formateMessageTime } from '../lib/utils';
 import { ChatContext } from '../../context/ChatContext';
 import { AuthContext } from '../../context/AuthContext';
@@ -25,7 +25,7 @@ const ChatContainer = () => {
   // handle sending an Image
   const handleSendImage = async (e) =>{
     const file = e.target.files[0];
-    if(!file || !file.type.startswith("image/")){
+    if(!file || !file.type.startsWith("image/")){
       toast.error("select an image file")
       return;
     }
@@ -119,7 +119,7 @@ const ChatContainer = () => {
         onKeyDown={(e)=> e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a Message' className='flex-1 text-sm py-3 bg-transparent border-none outline-none text-white placeholder-gray-400'
       />
     
-      <input type="file" id='image' accept='image/png, image/jpeg' hidden
+      <input onChange={handleSendImage} type="file" id='image' accept='image/png, image/jpeg' hidden
       />
 
     <label htmlFor="image"> 

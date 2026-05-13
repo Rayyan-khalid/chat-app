@@ -58,7 +58,7 @@ app.use("/api/auth", userRouter);
 app.use("/api/messages", messageRouter);
 
 
-// Connect to MONGODB
+// Connect to MONGOD
 await connectDB();
 
 

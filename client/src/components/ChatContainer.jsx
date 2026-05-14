@@ -7,12 +7,20 @@ import toast from 'react-hot-toast'
 
 const ChatContainer = () => {
 
-  const { messages, selectedUser, setSelectedUser, sendMessage, getMessages} = useContext(ChatContext)
-  const { typingUsers, sendTypingStatus } = useContext(ChatContext)
+  const {
+    messages,
+    selectedUser,
+    setSelectedUser,
+    sendMessage,
+    getMessages,
+    typingUsers,
+    sendTypingStatus,
+  } = useContext(ChatContext)
   const { authUser, onlineUsers } = useContext(AuthContext)
 
   const scrollEnd = useRef();
   const typingTimeout = useRef(null);
+  const isTyping = useRef(false);
   
   const [input, setInput] = useState('');
 
@@ -21,17 +29,31 @@ const ChatContainer = () => {
     e.preventDefault();
     if(input.trim() === "") return null;
     sendTypingStatus(selectedUser._id, false);
+    isTyping.current = false;
     await sendMessage({text: input.trim()});
     setInput("")
   }
 
   const handleInputChange = (e) => {
-    setInput(e.target.value);
-    sendTypingStatus(selectedUser._id, true);
+    const value = e.target.value;
+    setInput(value);
+
+    if (!value.trim()) {
+      sendTypingStatus(selectedUser._id, false);
+      isTyping.current = false;
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+      return;
+    }
+
+    if (!isTyping.current) {
+      sendTypingStatus(selectedUser._id, true);
+      isTyping.current = true;
+    }
 
     if (typingTimeout.current) clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       sendTypingStatus(selectedUser._id, false);
+      isTyping.current = false;
     }, 1200);
   }
 
@@ -44,6 +66,8 @@ const ChatContainer = () => {
     }
     const reader = new FileReader();
     reader.onloadend = async()=>{
+      sendTypingStatus(selectedUser._id, false);
+      isTyping.current = false;
       await sendMessage({image: reader.result})
       e.target.value = ""
     }
@@ -66,7 +90,8 @@ const ChatContainer = () => {
   useEffect(() => {
     return () => {
       if (typingTimeout.current) clearTimeout(typingTimeout.current);
-      if (selectedUser) sendTypingStatus(selectedUser._id, false);
+      if (selectedUser && isTyping.current) sendTypingStatus(selectedUser._id, false);
+      isTyping.current = false;
     }
   }, [selectedUser, sendTypingStatus])
 

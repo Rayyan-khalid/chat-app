@@ -92,10 +92,11 @@ export const ChatProvider = ({ children }) => {
         };
 
         const handleUserStoppedTyping = ({ senderId }) => {
-            setTypingUsers((prevTypingUsers) => ({
-                ...prevTypingUsers,
-                [senderId]: false,
-            }));
+            setTypingUsers((prevTypingUsers) => {
+                const updatedTypingUsers = { ...prevTypingUsers };
+                delete updatedTypingUsers[senderId];
+                return updatedTypingUsers;
+            });
         };
 
         socket.on("userTyping", handleUserTyping);

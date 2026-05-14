@@ -9,17 +9,11 @@ const LoginPage = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [bio, setBio] = useState('')
-  const [isDataSubmitted, setIsDataSubmitted] = useState(false)
 
   const {login} = useContext(AuthContext)
 
   const onSubmitHandler = (event)=>{
     event.preventDefault();
-
-    if(currState === 'Sign up' && !isDataSubmitted){
-      setIsDataSubmitted(true)
-      return;
-    }
     login(currState=== "Sign up" ? 'signup' : 'login', {fullName, email, password, bio})
   }
   
@@ -34,30 +28,25 @@ const LoginPage = () => {
       <form onSubmit={onSubmitHandler} className='flex flex-col w-[340px] p-5 gap-5 rounded-xl bg-white/10 backdrop-blur-lg border border-white/20 shadow-xl text-white'>
         <h2 className='font-medium text-2xl flex justify-between items-center'>
           {currState}
-          {isDataSubmitted && <img onClick={()=> setIsDataSubmitted(false)} src={assets.arrow_icon} alt="" className='w-5 cursor-pointer' />}
         </h2>
 
-        {currState === 'Sign up' && !isDataSubmitted &&(
+        {currState === 'Sign up' &&(
           <input onChange={(e) => setFullName(e.target.value)} value={fullName}
             type="text" 
             className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300' placeholder='Full Name' required/>
         )}
 
           {/* Email and Password */}
-        {!isDataSubmitted && (
-          <>
-            <input onChange={(e) => setEmail(e.target.value)} value={email}
-              type="email" 
-              className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300' placeholder='Email' required/>
+        <input onChange={(e) => setEmail(e.target.value)} value={email}
+          type="email" 
+          className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300' placeholder='Email' required/>
 
-            <input onChange={(e) => setPassword(e.target.value)} value={password}
-              type="password" 
-              className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300' placeholder='Password' required/>
-          </>
-        )}
+        <input onChange={(e) => setPassword(e.target.value)} value={password}
+          type="password" 
+          className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300' placeholder='Password' required/>
 
         {/* Bio State */}
-        {currState === 'Sign up' && !isDataSubmitted && (
+        {currState === 'Sign up' && (
             <textarea onChange={(e) => setBio(e.target.value)} value={bio} rows={4} className='p-2 text-sm bg-white/10 border border-white/20 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500 placeholder-gray-300 resize-none ' placeholder='provide a short bio...' required></textarea>
           )
         }
@@ -73,9 +62,9 @@ const LoginPage = () => {
 
         <div className='flex flex-col gap-2'>
           {currState === 'Sign up' ? (
-            <p className='text-sm text-gray-500'>Already have an account? <span onClick={() => {setCurrState('Login'); setIsDataSubmitted(false)}} className='text-violet-500 cursor-pointer'>Login Now</span></p>
+            <p className='text-sm text-gray-500'>Already have an account? <span onClick={() => setCurrState('Login')} className='text-violet-500 cursor-pointer'>Login Now</span></p>
           ) : (
-            <p className='text-sm text-gray-500'>Don't have an account? <span onClick={() => {setCurrState('Sign up'); setIsDataSubmitted(false)}} className='text-violet-500 cursor-pointer'>Sign up</span></p> 
+            <p className='text-sm text-gray-500'>Don't have an account? <span onClick={() => setCurrState('Sign up')} className='text-violet-500 cursor-pointer'>Sign up</span></p> 
           )}
         </div>
 

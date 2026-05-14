@@ -8,9 +8,11 @@ import toast from 'react-hot-toast'
 const ChatContainer = () => {
 
   const { messages, selectedUser, setSelectedUser, sendMessage, getMessages} = useContext(ChatContext)
+  const { typingUsers, sendTypingStatus } = useContext(ChatContext)
   const { authUser, onlineUsers } = useContext(AuthContext)
 
   const scrollEnd = useRef();
+  const typingTimeout = useRef(null);
   
   const [input, setInput] = useState('');
 
@@ -18,8 +20,19 @@ const ChatContainer = () => {
   const handleSendMessage = async (e)=>{
     e.preventDefault();
     if(input.trim() === "") return null;
+    sendTypingStatus(selectedUser._id, false);
     await sendMessage({text: input.trim()});
     setInput("")
+  }
+
+  const handleInputChange = (e) => {
+    setInput(e.target.value);
+    sendTypingStatus(selectedUser._id, true);
+
+    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    typingTimeout.current = setTimeout(() => {
+      sendTypingStatus(selectedUser._id, false);
+    }, 1200);
   }
 
   // handle sending an Image
@@ -50,15 +63,25 @@ const ChatContainer = () => {
       }
   },[messages])        // Scroll to the end of the chat when component mounts but iam not adding messagesDummyData as dependency because it will scroll to end on every message change which is not good for user experience
 
+  useEffect(() => {
+    return () => {
+      if (typingTimeout.current) clearTimeout(typingTimeout.current);
+      if (selectedUser) sendTypingStatus(selectedUser._id, false);
+    }
+  }, [selectedUser, sendTypingStatus])
+
   return selectedUser ? 
   (
     <div className='h-full overflow-scroll relative backdrop-blur-lg'>
       {/* Header Profile Content */}
       <div className='flex items-center gap-4 py-3 mx-4 border-b border-gray-600'>
         <img src={selectedUser.profilePic || assets.avatar_icon} alt="" className='w-8 rounded-full'/>
-        <p className='flex-1 text-lg text-white flex items-center gap-2 '>
-          {selectedUser.fullName}
-        {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
+        <p className='flex-1 text-lg text-white flex flex-col'>
+          <span className='flex items-center gap-2'>
+            {selectedUser.fullName}
+            {onlineUsers.includes(selectedUser._id) && <span className='w-2 h-2 rounded-full bg-green-500'></span>}
+          </span>
+          {typingUsers[selectedUser._id] && <span className='text-xs font-light text-green-400'>Typing...</span>}
         </p>
         {/* Info Icon on top right */}
         {/* Back Arrow (Mobile Only) */}
@@ -115,7 +138,7 @@ const ChatContainer = () => {
 
       <div className='absolute bottom-0 left-0 right-0 flex items-center gap-3 p-3'>
       <div className='flex-1 flex items-center bg-white/10 px-4 rounded-full'>
-      <input onChange={(e)=> setInput(e.target.value)} value={input} 
+      <input onChange={handleInputChange} value={input} 
         onKeyDown={(e)=> e.key === "Enter" ? handleSendMessage(e) : null} type="text" placeholder='Send a Message' className='flex-1 text-sm py-3 bg-transparent border-none outline-none text-white placeholder-gray-400'
       />
     

@@ -9,6 +9,7 @@ export const ChatProvider = ({ children }) => {
     const [users, setUsers] = useState(userDummyData);
     const [selectedUser, setSelectedUser] = useState(null);
     const [unseenMessages, setUnseenMessages] = useState({});
+    const [typingUsers, setTypingUsers] = useState({});
 
     const { socket, axios } = useContext(AuthContext);
 
@@ -53,6 +54,12 @@ export const ChatProvider = ({ children }) => {
         }
     }, [axios, selectedUser]);
 
+    const sendTypingStatus = useCallback((receiverId, isTyping) => {
+        if (!socket || !receiverId) return;
+
+        socket.emit(isTyping ? "typing" : "stopTyping", { receiverId });
+    }, [socket]);
+
     useEffect(() => {
         if (!socket) return;
 
@@ -74,17 +81,45 @@ export const ChatProvider = ({ children }) => {
         return () => socket.off("newMessage", handleNewMessage);
     }, [axios, socket, selectedUser]);
 
+    useEffect(() => {
+        if (!socket) return;
+
+        const handleUserTyping = ({ senderId }) => {
+            setTypingUsers((prevTypingUsers) => ({
+                ...prevTypingUsers,
+                [senderId]: true,
+            }));
+        };
+
+        const handleUserStoppedTyping = ({ senderId }) => {
+            setTypingUsers((prevTypingUsers) => ({
+                ...prevTypingUsers,
+                [senderId]: false,
+            }));
+        };
+
+        socket.on("userTyping", handleUserTyping);
+        socket.on("userStoppedTyping", handleUserStoppedTyping);
+
+        return () => {
+            socket.off("userTyping", handleUserTyping);
+            socket.off("userStoppedTyping", handleUserStoppedTyping);
+        };
+    }, [socket]);
+
     const value = useMemo(() => ({
         messages,
         users,
         selectedUser,
         unseenMessages,
+        typingUsers,
         getUsers,
         getMessages,
         sendMessage,
+        sendTypingStatus,
         setSelectedUser,
         setUnseenMessages,
-    }), [getMessages, getUsers, messages, selectedUser, sendMessage, unseenMessages, users]);
+    }), [getMessages, getUsers, messages, selectedUser, sendMessage, sendTypingStatus, typingUsers, unseenMessages, users]);
 
     return (
         <ChatContext.Provider value={value}>
